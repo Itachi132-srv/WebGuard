@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shardex WebGuard AI - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-black text-zinc-100 min-h-screen font-sans selection:bg-purple-500 selection:text-white">
+    <div class="max-w-6xl mx-auto px-6 py-10">
+        <header class="flex justify-between items-center mb-8 pb-6 border-b border-zinc-800">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-purple-400">Shardex WebGuard AI</h1>
+                <p class="text-sm text-zinc-400">Functional Consistency & Security Testing Tool</p>
+            </div>
+            <span class="px-3 py-1 bg-purple-950 text-purple-300 border border-purple-800/50 rounded-full text-xs font-medium">MVP v1.2</span>
+        </header>
+
+        <!-- Tabs -->
+        <div class="flex gap-3 mb-6 border-b border-zinc-800 pb-4">
+            <button onclick="switchTab('security')" id="btn-security" class="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg transition">Security Scan</button>
+            <button onclick="switchTab('blueprint')" id="btn-blueprint" class="px-4 py-2 bg-zinc-900 text-zinc-400 text-sm font-medium rounded-lg transition hover:bg-zinc-800">Functional Blueprint</button>
+        </div>
+
+        <!-- Target Input -->
+        <div class="bg-zinc-900/60 border border-zinc-800 p-5 rounded-xl mb-6">
+            <label class="block text-xs font-medium text-zinc-400 mb-1.5">Target URL</label>
+            <input type="text" id="targetUrl" value="http://127.0.0.1:8000" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2 text-sm text-zinc-200 focus:outline-none focus:border-purple-500">
+        </div>
+
+        <!-- Security Panel -->
+        <div id="panel-security" class="space-y-6">
+            <button onclick="runSecurityScan()" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-medium text-sm rounded-lg transition">Run Security Header Scan</button>
+        </div>
+
+        <!-- Blueprint Panel -->
+        <div id="panel-blueprint" class="space-y-6 hidden">
+            <div class="bg-zinc-900/60 border border-zinc-800 p-5 rounded-xl">
+                <h3 class="text-sm font-semibold text-purple-400 mb-3">Graphical Journey Steps</h3>
+                <div id="steps-container" class="space-y-3 mb-4">
+                    <div class="flex gap-2 items-center bg-zinc-950 p-3 rounded-lg border border-zinc-800">
+                        <select class="bg-zinc-900 text-zinc-200 text-sm p-2 rounded border border-zinc-700 step-action">
+                            <option value="click">Click</option>
+                            <option value="fill">Fill</option>
+                            <option value="assert_text">Assert Text</option>
+                            <option value="wait">Wait (ms)</option>
+                        </select>
+                        <input type="text" placeholder="Selector (#id)" class="bg-zinc-900 text-zinc-200 text-sm p-2 rounded border border-zinc-700 flex-1 step-selector">
+                        <input type="text" placeholder="Value / Text" class="bg-zinc-900 text-zinc-200 text-sm p-2 rounded border border-zinc-700 flex-1 step-value">
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="addStep()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm rounded-lg">Add Step</button>
+                    <button onclick="runBlueprint()" class="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm rounded-lg">Run Blueprint</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Box -->
+        <div class="mt-6 bg-zinc-900/60 border border-zinc-800 p-6 rounded-xl min-h-[250px]">
+            <h2 class="text-lg font-semibold text-zinc-200 mb-4">Execution Results</h2>
+            <div id="resultsOutput" class="space-y-3 text-sm text-zinc-400">
+                <p>Run a test to see results here...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            document.getElementById('panel-security').classList.toggle('hidden', tab !== 'security');
+            document.getElementById('panel-blueprint').classList.toggle('hidden', tab !== 'blueprint');
+            document.getElementById('btn-security').className = tab === 'security' ? 'px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg' : 'px-4 py-2 bg-zinc-900 text-zinc-400 text-sm font-medium rounded-lg hover:bg-zinc-800';
+            document.getElementById('btn-blueprint').className = tab === 'blueprint' ? 'px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg' : 'px-4 py-2 bg-zinc-900 text-zinc-400 text-sm font-medium rounded-lg hover:bg-zinc-800';
+        }
+
+        function addStep() {
+            const container = document.getElementById('steps-container');
+            const div = document.createElement('div');
+            div.className = "flex gap-2 items-center bg-zinc-950 p-3 rounded-lg border border-zinc-800";
+            div.innerHTML = `
+                <select class="bg-zinc-900 text-zinc-200 text-sm p-2 rounded border border-zinc-700 step-action">
+                    <option value="click">Click</option>
+                    <option value="fill">Fill</option>
+                    <option value="assert_text">Assert Text</option>
+                    <option value="wait">Wait (ms)</option>
+                </select>
+                <input type="text" placeholder="Selector (#id)" class="bg-zinc-900 text-zinc-200 text-sm p-2 rounded border border-zinc-700 flex-1 step-selector">
+                <input type="text" placeholder="Value / Text" class="bg-zinc-900 text-zinc-200 text-sm p-2 rounded border border-zinc-700 flex-1 step-value">
+            `;
+            container.appendChild(div);
+        }
+
+        async function runSecurityScan() {
+            const url = document.getElementById('targetUrl').value;
+            const output = document.getElementById('resultsOutput');
+            output.innerHTML = `<p class="text-purple-400 animate-pulse">Running security scan...</p>`;
+            try {
+                const res = await fetch('http://127.0.0.1:8000/api/test/security', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ target_url: url })
+                });
+                const data = await res.json();
+                output.innerHTML = `<pre class="text-xs text-zinc-300">${JSON.stringify(data, null, 2)}</pre>`;
+            } catch(e) {
+                output.innerHTML = `<p class="text-red-400">Error: ${e.message}</p>`;
+            }
+        }
+
+        async function runBlueprint() {
+            const url = document.getElementById('targetUrl').value;
+            const stepElements = document.querySelectorAll('#steps-container > div');
+            const steps = Array.from(stepElements).map(el => ({
+                action: el.querySelector('.step-action').value,
+                selector: el.querySelector('.step-selector').value,
+                value: el.querySelector('.step-value').value
+            }));
+
+            const output = document.getElementById('resultsOutput');
+            output.innerHTML = `<p class="text-purple-400 animate-pulse">Executing graphical blueprint workflow...</p>`;
+            try {
+                const res = await fetch('http://127.0.0.1:8000/api/test/functional', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ target_url: url, steps })
+                });
+                const data = await res.json();
+                output.innerHTML = `<pre class="text-xs text-zinc-300">${JSON.stringify(data, null, 2)}</pre>`;
+            } catch(e) {
+                output.innerHTML = `<p class="text-red-400">Error: ${e.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
